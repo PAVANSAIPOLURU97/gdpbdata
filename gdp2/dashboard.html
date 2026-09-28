@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pavan's Golden Dairy Products — Home</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="assets/css/variables.css">
+<link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+
+<header class="app-topbar">
+  <div class="app-topbar-left">
+    <img id="appLogo" alt="">
+    <div>
+      <div class="app-topbar-title">Pavan's Golden Dairy Products</div>
+      <div class="app-topbar-user" id="userLabel"></div>
+    </div>
+  </div>
+  <button class="logout-button" id="logoutBtn" type="button">
+    <img id="logoutIcon" alt="">Log Out
+  </button>
+</header>
+
+<main>
+  <div class="tile-grid" id="tileGrid"></div>
+</main>
+
+<script>const BASE_PATH = "";</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/users-data.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/dashboard.js"></script>
+<script>
+  const session = requireLogin(); // redirects to login if not signed in
+
+  if (session) {
+    setImage(document.getElementById("appLogo"), "appLogo");
+    setImage(document.getElementById("logoutIcon"), "logoutIcon");
+    document.getElementById("userLabel").textContent = session.name + " (" + session.role + ")";
+    renderTiles(session);
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", logout);
+</script>
+</body>
+</html>

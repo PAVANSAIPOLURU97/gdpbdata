@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pavan's Golden Dairy Products — Sales</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../assets/css/variables.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<link rel="stylesheet" href="../assets/css/forms.css">
+<link rel="stylesheet" href="../assets/css/sales.css">
+</head>
+<body>
+
+<header class="app-topbar">
+  <div class="app-topbar-left">
+    <img id="appLogo" alt="">
+    <div>
+      <div class="app-topbar-title">Sales</div>
+      <div class="app-topbar-user" id="userLabel"></div>
+    </div>
+  </div>
+  <button class="logout-button" id="logoutBtn" type="button">
+    <img id="logoutIcon" alt="">Log Out
+  </button>
+</header>
+
+<main class="sales-page">
+
+  <!-- ============ Bill header ============ -->
+  <div class="bill-header-fields">
+    <div class="form-group">
+      <label for="entryDateTime">Date &amp; Time</label>
+      <input type="datetime-local" id="entryDateTime" required>
+    </div>
+    <div class="form-group">
+      <label for="billNo">Bill No</label>
+      <input type="text" id="billNo" readonly tabindex="-1">
+    </div>
+    <div class="form-group">
+      <label for="billerName">Biller</label>
+      <select id="billerName" required></select>
+    </div>
+  </div>
+
+  <div class="sales-columns">
+
+    <!-- ============ LEFT: add one product at a time ============ -->
+    <section class="form-panel entry-panel">
+      <h2 id="entryHeading">Add a product to this bill</h2>
+
+      <div class="form-group">
+        <label for="productName">Product</label>
+        <select id="productName"></select>
+      </div>
+
+      <!-- Rate straight from Product Master, for the product chosen -->
+      <div class="rate-strip" id="rateStrip">Pick a product to see its rate.</div>
+
+      <!-- Either / or entry -->
+      <div class="either-or">
+        <div class="either-or-head">
+          <span>Enter quantity <em>or</em> amount — the other fills in itself</span>
+          <button type="button" class="link-button" id="clearEntryBtn">&#8635; Clear both</button>
+        </div>
+
+        <div class="entry-pair" id="qtyPair">
+          <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity" inputmode="decimal" step="0.001" min="0" placeholder="e.g. 0.5">
+          </div>
+          <div class="form-group">
+            <label for="unit">Unit</label>
+            <select id="unit"></select>
+          </div>
+        </div>
+
+        <div class="either-or-divider"><span>or</span></div>
+
+        <div class="entry-pair single" id="amountPair">
+          <div class="form-group">
+            <label for="amount">Amount &#8377;</label>
+            <input type="number" id="amount" inputmode="decimal" step="0.01" min="0" placeholder="e.g. 50.00">
+          </div>
+        </div>
+      </div>
+
+      <div class="line-price-box" id="linePriceBox">
+        <span class="line-price-label">Price for this product</span>
+        <span class="line-price-value" id="linePriceValue">&#8377;0</span>
+      </div>
+      <div class="line-error" id="lineError"></div>
+
+      <button type="button" class="primary-button" id="addProductBtn">+ Add product to bill</button>
+      <button type="button" class="secondary-button" id="cancelEditBtn" style="display:none;">Cancel edit</button>
+
+      <button type="button" class="secondary-button" id="refreshBtn" style="margin-top:var(--space-sm);">&#8635; Refresh products / units / employees</button>
+    </section>
+
+    <!-- ============ RIGHT: this bill only ============ -->
+    <section class="bill-panel">
+      <h2 class="bill-panel-title">
+        Bill summary
+        <span class="bill-panel-billno" id="billNoTag"></span>
+      </h2>
+
+      <div class="table-scroll">
+        <table class="bill-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Product</th>
+              <th class="num">Qty</th>
+              <th>Unit</th>
+              <th class="num">Amount &#8377;</th>
+              <th class="num">Discount &#8377;</th>
+              <th class="num">Final &#8377;</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="billBody"></tbody>
+          <tfoot id="billFoot"></tfoot>
+        </table>
+      </div>
+
+      <div class="bill-total-box" id="billTotalBox">Bill total: &#8377;0</div>
+
+      <div class="payment-head">
+        <span>How did the customer pay?</span>
+        <span class="payment-quick">
+          <button type="button" class="link-button" id="allCashBtn">All cash</button>
+          <button type="button" class="link-button" id="allUpiBtn">All UPI</button>
+        </span>
+      </div>
+
+      <div class="payment-fields">
+        <div class="form-group">
+          <label for="cashPaid">Cash &#8377;</label>
+          <input type="number" id="cashPaid" inputmode="decimal" step="0.01" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label for="onlinePaid">UPI &#8377;</label>
+          <input type="number" id="onlinePaid" inputmode="decimal" step="0.01" min="0" value="0">
+        </div>
+      </div>
+      <div class="payment-check" id="paymentCheck"></div>
+
+      <button type="button" class="primary-button" id="submitBtn" style="margin-top:var(--space-sm);">Save bill</button>
+      <div class="form-status" id="formStatus"></div>
+    </section>
+
+  </div>
+
+  <a class="back-button" href="../dashboard.html">&larr; Back to Dashboard</a>
+</main>
+
+<script>const BASE_PATH = "../";</script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/users-data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/master/master-common.js"></script>
+<script src="../assets/js/sales.js"></script>
+</body>
+</html>

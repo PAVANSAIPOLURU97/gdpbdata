@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboards — Pavan's Golden Dairy Products</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../assets/css/variables.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<link rel="stylesheet" href="../assets/css/forms.css">
+<!-- NEW: only adds the dashboard panel. Must load last. -->
+<link rel="stylesheet" href="../assets/css/dashboards.css?v=1">
+</head>
+<body class="dash-body">
+
+<header class="app-topbar">
+  <div class="app-topbar-left">
+    <img id="appLogo" alt="">
+    <div>
+      <div class="app-topbar-title">Dashboards</div>
+      <div class="app-topbar-user" id="userLabel"></div>
+    </div>
+  </div>
+  <button class="logout-button" id="logoutBtn" type="button">
+    <img id="logoutIcon" alt="">Log Out
+  </button>
+</header>
+
+<main class="dash-page">
+
+  <nav class="dash-tabs" id="dashTabs">
+    <button class="dash-tab is-active" type="button" data-pane="sales">Business Sales</button>
+    <button class="dash-tab" type="button" data-pane="production">Production<span class="soon">later</span></button>
+    <button class="dash-tab" type="button" data-pane="milk">Milk &amp; Procurement<span class="soon">later</span></button>
+    <button class="dash-tab" type="button" data-pane="customers">Customers<span class="soon">later</span></button>
+    <button class="dash-tab" type="button" data-pane="staff">Staff<span class="soon">later</span></button>
+  </nav>
+
+  <!-- ==================== BUSINESS SALES ==================== -->
+  <section class="dash-pane is-active" id="pane-sales">
+
+    <div class="dash-filters">
+      <div class="dash-filters-head">
+        <h2>Filters</h2>
+        <div class="dash-ranges" id="dashRanges">
+          <button type="button" data-range="today">Today</button>
+          <button type="button" data-range="week">This week</button>
+          <button type="button" data-range="month">This month</button>
+          <button type="button" data-range="year">This year</button>
+          <button type="button" data-range="all">Everything</button>
+        </div>
+      </div>
+
+      <div class="dash-filter-grid">
+        <div class="dash-field">
+          <label for="ds-day-btn">Date (dd)</label>
+          <div id="filterDay"></div>
+        </div>
+        <div class="dash-field">
+          <label for="ds-dow-btn">Day</label>
+          <div id="filterDow"></div>
+        </div>
+        <div class="dash-field">
+          <label for="ds-week-btn">Week of month</label>
+          <div id="filterWeek"></div>
+        </div>
+        <div class="dash-field">
+          <label for="ds-month-btn">Month</label>
+          <div id="filterMonth"></div>
+        </div>
+        <div class="dash-field">
+          <label for="ds-year-btn">Year</label>
+          <div id="filterYear"></div>
+        </div>
+        <div class="dash-field">
+          <label for="ds-product-btn">Products</label>
+          <div id="filterProduct"></div>
+        </div>
+        <div class="dash-field dash-actions">
+          <button type="button" class="dash-primary" id="applyBtn">Apply</button>
+          <button type="button" class="dash-ghost" id="resetBtn">Reset</button>
+          <button type="button" class="dash-ghost" id="reloadBtn">Reload data</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dashError"></div>
+
+    <div class="dash-kpis" id="dashKpis"></div>
+
+    <div class="dash-grid dash-grid-wide">
+      <section class="dash-card">
+        <h3 class="dash-card-title">Sales and customers over time<span>Bars are sales, the line is bills</span></h3>
+        <div id="dashTrend"></div>
+      </section>
+      <section class="dash-card">
+        <h3 class="dash-card-title">Share of sales<span>By product</span></h3>
+        <div id="dashSalesShare"></div>
+      </section>
+    </div>
+
+    <div class="dash-grid dash-grid-wide">
+      <section class="dash-card">
+        <h3 class="dash-card-title">Product ladder<span>Bar = share of sales, marker = share of customers</span></h3>
+        <div class="dash-ladder" id="dashLadder"></div>
+      </section>
+      <section class="dash-card">
+        <h3 class="dash-card-title">Share of customers<span>Bills containing each product</span></h3>
+        <div id="dashCustomerShare"></div>
+      </section>
+    </div>
+
+    <section class="dash-card">
+      <h3 class="dash-card-title">Product detail<span>Tap a heading to sort</span></h3>
+      <div class="dash-table-scroll">
+        <table class="dash-table">
+          <thead><tr id="dashTableHead"></tr></thead>
+          <tbody id="dashTableBody"></tbody>
+          <tfoot id="dashTableFoot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <div id="dashNotes"></div>
+    <p class="dash-footnote" id="dashFootnote"></p>
+  </section>
+
+  <!-- ==================== PLACEHOLDER TABS ==================== -->
+  <section class="dash-pane" id="pane-production">
+    <div class="dash-placeholder">
+      <h3>Production</h3>
+      <p>Reserved for Products Made: batch output, quality scores, who made what, and raw material used per kilo produced.</p>
+    </div>
+  </section>
+  <section class="dash-pane" id="pane-milk">
+    <div class="dash-placeholder">
+      <h3>Milk &amp; Procurement</h3>
+      <p>Reserved for milk intake by shift, fat and SNF trends, and what raw materials cost across suppliers.</p>
+    </div>
+  </section>
+  <section class="dash-pane" id="pane-customers">
+    <div class="dash-placeholder">
+      <h3>Customers</h3>
+      <p>Reserved for repeat customers, order history by name, and who still owes money.</p>
+    </div>
+  </section>
+  <section class="dash-pane" id="pane-staff">
+    <div class="dash-placeholder">
+      <h3>Staff</h3>
+      <p>Reserved for sales by biller and production by employee.</p>
+    </div>
+  </section>
+
+  <div style="text-align:center;">
+    <a class="back-button" href="../dashboard.html">&#8592; Back to Home</a>
+  </div>
+</main>
+
+<div class="dash-busy" id="dashBusy"><div class="dash-spinner"></div></div>
+
+<script>const BASE_PATH = "../";</script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/users-data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/master/master-common.js"></script>
+<script src="../assets/js/dashboards.js?v=1"></script>
+</body>
+</html>

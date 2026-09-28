@@ -1,0 +1,79 @@
+/*
+  pending-orders.css
+  ------------------------------------------------------------------
+  Extra styles for the two NEW screens only:
+    pages/payment-pending.html
+    pages/orders.html
+
+  These pages already load variables.css, dashboard.css, forms.css and
+  sales.css, and reuse the Sales layout classes as-is (.sales-page,
+  .sales-columns, .bill-header-fields, .entry-panel, .rate-strip,
+  .entry-pair, .line-price-box, .bill-panel, .bill-table, .row-button,
+  .bill-total-box, .payment-check). Nothing in those files is changed
+  or overridden here — this file only ADDS the handful of pieces the
+  two new screens need on top.
+
+  Load order matters: this file must come AFTER sales.css, which is how
+  both new pages link it.
+  ------------------------------------------------------------------
+*/
+
+/* A quieter total, used above the advance box on Orders so the two
+   numbers can't be mistaken for each other: the order total is the
+   plain sum, the gold box below it is what the customer still owes. */
+.subtotal-box {
+  margin-top: var(--space-sm);
+  padding: 10px var(--space-sm);
+  background: var(--color-gold-soft);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--color-cocoa);
+  text-align: center;
+}
+
+/* Heading row above the advance field — same shape as Sales' .payment-head */
+.advance-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-top: var(--space-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--color-cocoa-soft);
+}
+
+.advance-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+  margin-top: 6px;
+  margin-bottom: var(--space-sm);
+}
+
+.advance-fields .form-group { margin-bottom: 0; }
+
+/* "Payment expected on ..." line under the pending total. Plain text,
+   no colour shouting — it is a reminder, not a warning. */
+.due-note {
+  margin-top: var(--space-xs);
+  padding: 8px var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--color-cream);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-cocoa-soft);
+  text-align: center;
+}
+
+.due-note:empty { display: none; }
+
+/* On a phone the header fields stack, so give the customer name room
+   to breathe rather than sitting flush against the date pickers. */
+@media (max-width: 720px) {
+  .bill-header-fields .form-group + .form-group { margin-top: var(--space-xs); }
+}

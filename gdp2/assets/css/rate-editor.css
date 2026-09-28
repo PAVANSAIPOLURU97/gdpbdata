@@ -1,0 +1,109 @@
+/*
+  rate-editor.css
+  ------------------------------------------------------------------
+  NEW FILE. Adds only the handful of pieces the reworked Orders and
+  Payment Pending screens need:
+
+    * .rate-editor       — the editable "price per unit" block that sits
+                           under Quantity / Unit
+    * .header-wide /
+      .header-full       — mobile number and address fields inside the
+                           existing .bill-header-fields grid (Orders)
+    * .line-sub          — the small "@ 50 / Kg (master 100)" note under
+                           a product name in the summary table
+
+  Nothing in variables.css, forms.css, sales.css or pending-orders.css
+  is changed or overridden. Load this file LAST on those two pages,
+  which is how both HTML files link it.
+  ------------------------------------------------------------------
+*/
+
+/* --- The editable price per unit --- */
+
+.rate-editor {
+  border: 2px solid var(--color-gold-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  background: var(--color-cream);
+}
+
+.rate-editor-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-xs);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-cocoa-soft);
+}
+
+.rate-editor .entry-pair .form-group { margin-bottom: 0; }
+
+/* The price is the number most likely to be retyped, so give it weight. */
+.rate-editor #ratePrice {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.rate-editor-hint {
+  margin-top: var(--space-xs);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--color-cocoa-soft);
+}
+
+.rate-editor-hint:empty { display: none; }
+
+/* Charging ABOVE the master rate is legal but unusual — say so plainly
+   rather than letting it slip past unnoticed. */
+.rate-editor-hint.warn {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+/* --- Extra header fields (Orders) --- */
+
+/* Mobile number wants more room than a third of the row on a wide
+   screen, but must not push the address onto its line. */
+.bill-header-fields .header-wide { grid-column: span 2; }
+.bill-header-fields .header-full { grid-column: 1 / -1; }
+
+.bill-header-fields textarea {
+  min-height: 64px;
+  resize: vertical;
+}
+
+.field-hint {
+  margin-top: 4px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-cocoa-soft);
+}
+
+@media (max-width: 720px) {
+  .bill-header-fields .header-wide { grid-column: 1 / -1; }
+}
+
+/* --- The rate note under a product name in the summary table --- */
+
+.line-sub {
+  margin-top: 2px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--color-gold-dark);
+  font-weight: 600;
+}
+
+.line-sub span {
+  color: var(--color-cocoa-soft);
+  font-weight: 400;
+}
+
+/* A discount cell can now legitimately hold a negative number (a rate
+   above master). Widen it a little so the minus sign is never clipped. */
+.bill-table input.discount-input { width: 82px; }

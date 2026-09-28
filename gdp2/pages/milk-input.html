@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Milk Input — Pavan's Golden Dairy Products</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../assets/css/variables.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<link rel="stylesheet" href="../assets/css/forms.css">
+</head>
+<body>
+
+<header class="app-topbar">
+  <div class="app-topbar-left">
+    <img id="appLogo" alt="">
+    <div class="app-topbar-title">Milk Input</div>
+  </div>
+  <button class="logout-button" id="logoutBtn" type="button">
+    <img id="logoutIcon" alt="">Log Out
+  </button>
+</header>
+
+<main class="master-form-page">
+  <div class="master-columns">
+
+    <section class="form-panel">
+      <h2>Add Milk Input</h2>
+      <form id="milkInputForm">
+
+        <div class="form-group">
+          <label for="entryDateTime">Date &amp; Time</label>
+          <input type="datetime-local" id="entryDateTime" required>
+        </div>
+
+        <div class="form-group">
+          <label for="shift">Shift</label>
+          <select id="shift" required>
+            <option value="">Select shift</option>
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+          </select>
+        </div>
+
+        <div id="blocksContainer"><!-- one block per milk type, added by JS --></div>
+
+        <button type="button" class="secondary-button" id="addBlockBtn">+ Add Another Milk Type</button>
+        <button type="button" class="secondary-button" id="refreshOptionsBtn">&#8635; Refresh Milk Types &amp; Units</button>
+
+        <button type="submit" class="primary-button" id="submitBtn">Save Entry</button>
+        <div class="form-status" id="formStatus"></div>
+      </form>
+    </section>
+
+    <section class="list-panel">
+      <h2>Milk Input Entries</h2>
+      <div id="listArea"><p class="list-loading">Loading...</p></div>
+      <div id="totalArea"></div>
+    </section>
+
+  </div>
+
+  <div style="text-align:center;">
+    <a class="back-button" href="../dashboard.html">&#8592; Back to Home</a>
+  </div>
+</main>
+
+<script>const BASE_PATH = "../";</script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/users-data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/milk-input.js"></script>
+</body>
+</html>

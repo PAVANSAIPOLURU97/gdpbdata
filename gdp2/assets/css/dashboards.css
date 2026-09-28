@@ -1,0 +1,881 @@
+/*
+  dashboards.css
+  ------------------------------------------------------------------
+  Styles pages/dashboards.html and nothing else.
+
+  Every class here starts with .dash-, .ds-, .kpi- or .rung-, and the
+  only element rules are scoped inside .dash-page or .ds-pop. Nothing
+  in variables.css, dashboard.css, forms.css, sales.css,
+  pending-orders.css or rate-editor.css is changed or overridden —
+  this file only ADDS. Load it LAST on that page.
+
+  ------------------------------------------------------------------
+  VISUAL DIRECTION (revised): DAYLIGHT, NOT NEON
+  ------------------------------------------------------------------
+  The earlier version of this screen was a dark cocoa panel carrying
+  saturated accents. Staff read it for long stretches on cheap phone
+  screens, and bright-on-dark at that saturation is tiring. This
+  version turns the panel over:
+
+    - Surface is a soft cool paper, cards are plain white, ink is a
+      dark slate. Low glare, high legibility, prints and screenshots
+      cleanly for anyone the owner shows it to.
+    - Every data colour is a muted hue already defined in
+      variables.css (--color-milk-blue, --color-teal, --color-green,
+      --color-plum, --color-rust, --color-indigo, --color-gold). They
+      are used at their real weight, never brightened.
+    - Numbers are ink, not colour. A KPI tile is identified by a thin
+      coloured rail on its left edge; the figure itself stays dark so
+      it can actually be read. Nothing on the screen shouts.
+    - Gold is reserved for ONE job: the primary action and the active
+      tab. If it is gold, it is the thing to press.
+
+  The local hex values below are neutrals (paper, lines, ink) that do
+  not exist in variables.css. They are declared once, scoped inside
+  .dash-page, and referenced everywhere else in this file — the same
+  pattern this file already used, so nothing leaks to other pages.
+  ------------------------------------------------------------------
+*/
+
+.dash-page {
+  /* --- Surfaces: cool paper, white cards, quiet inset --- */
+  --dash-bg:       #EEF2F6;   /* page paper */
+  --dash-panel:    #FFFFFF;   /* cards, filter bar, table */
+  --dash-panel-2:  #F4F7FA;   /* inset: inputs, tracks, quiet buttons */
+  --dash-panel-3:  #E9EFF5;   /* pressed / hovered inset */
+
+  /* --- Lines --- */
+  --dash-line:        #DCE4EC;
+  --dash-line-strong: #C2CEDA;
+
+  /* --- Ink --- */
+  --dash-text:  #202D3A;   /* headings, figures */
+  --dash-muted: #5C6E80;   /* labels, secondary */
+  --dash-faint: #8A9AAA;   /* captions, axes, nil */
+
+  /* --- Data colours: the variables.css tab hues, unmodified --- */
+  --dash-gold:   var(--color-gold);        /* #C9922A  action, primary series */
+  --dash-blue:   var(--color-milk-blue);   /* #2F6690 */
+  --dash-teal:   var(--color-teal);        /* #2E7A6E */
+  --dash-green:  var(--color-green);       /* #4C7A3D */
+  --dash-plum:   var(--color-plum);        /* #6B3F69 */
+  --dash-rust:   var(--color-rust);        /* #A6522B */
+  --dash-indigo: var(--color-indigo);      /* #3F4E8C */
+  --dash-slate:  var(--color-slate);       /* #45586B */
+
+  /* Softened fills for bars and areas — the same hues, let down onto paper */
+  --dash-fill-primary: #9FBBD2;   /* blue at bar weight */
+  --dash-fill-second:  #BFD3C7;   /* teal at bar weight */
+
+  --dash-focus: #2F6690;
+
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-md);
+  color: var(--dash-text);
+}
+
+/* Page background, so there is no mismatched strip under short content. */
+body.dash-body {
+  overflow-x: hidden;
+  background: #EEF2F6;
+  min-height: 100vh;
+}
+
+/* ---------------- Dashboard sub-tabs ---------------- */
+
+.dash-tabs {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--dash-line-strong);
+  margin-bottom: var(--space-md);
+}
+
+.dash-tab {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px var(--space-sm);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--dash-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.dash-tab:hover { color: var(--dash-text); }
+
+.dash-tab.is-active {
+  color: var(--dash-text);
+  border-bottom-color: var(--dash-gold);
+}
+
+.dash-tab .soon {
+  margin-left: 8px;
+  padding: 2px 8px;
+  background: var(--dash-panel-2);
+  border: 1px solid var(--dash-line);
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--dash-faint);
+}
+
+.dash-pane { display: none; }
+.dash-pane.is-active { display: block; }
+
+/* ---------------- Filters ---------------- */
+
+.dash-filters {
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  margin-bottom: var(--space-md);
+  box-shadow: 0 1px 2px rgba(32, 45, 58, 0.05);
+}
+
+.dash-filters-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.dash-filters-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  color: var(--dash-muted);
+}
+
+.dash-ranges { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+
+.dash-ranges button {
+  min-height: 44px;
+  padding: 0 var(--space-sm);
+  background: var(--dash-panel-2);
+  border: 1px solid var(--dash-line);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--dash-muted);
+  cursor: pointer;
+}
+
+.dash-ranges button:hover {
+  background: var(--dash-panel-3);
+  border-color: var(--dash-line-strong);
+  color: var(--dash-text);
+}
+
+.dash-ranges button.is-on {
+  background: var(--color-gold-soft);
+  border-color: var(--dash-gold);
+  color: var(--color-gold-dark);
+}
+
+.dash-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-sm);
+  align-items: end;
+}
+
+.dash-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--dash-muted);
+}
+
+.dash-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.dash-primary, .dash-ghost {
+  flex: 1 1 auto;
+  min-height: 52px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dash-primary {
+  background: var(--color-gold);
+  color: #FFFFFF;
+  border: 1px solid var(--color-gold-dark);
+}
+.dash-primary:hover { background: var(--color-gold-dark); }
+
+.dash-ghost {
+  background: var(--dash-panel-2);
+  border: 1px solid var(--dash-line-strong);
+  color: var(--dash-muted);
+}
+.dash-ghost:hover { background: var(--dash-panel-3); color: var(--dash-text); }
+
+/* ---------------- Multi-select ----------------
+   Rebuilt to stop the list feeling cramped:
+     - the sheet is wider and taller, rows are 48px
+     - option text is full size, never subscript-looking
+     - the tick box is a custom rounded control, not the raw browser
+       checkbox, and a chosen row is tinted so the selection is
+       obvious at arm's length
+     - "0 — don't use this filter" is pinned below the list as its own
+       bordered bar in clay, so it is never mistaken for a data value
+   Markup and JS are unchanged; the input is still a real checkbox and
+   still reports .checked.
+*/
+
+.ds { position: relative; }
+
+.ds-button {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 38px 0 14px;
+  text-align: left;
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-line-strong);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--dash-text);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-button:hover { border-color: var(--dash-slate); }
+.ds-button.is-muted { color: var(--dash-faint); font-weight: 400; }
+
+.ds.is-open .ds-button {
+  border-color: var(--dash-blue);
+  box-shadow: 0 0 0 3px rgba(47, 102, 144, 0.14);
+}
+
+.ds-button::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -6px;
+  border-right: 2px solid var(--dash-muted);
+  border-bottom: 2px solid var(--dash-muted);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.ds-pop {
+  display: none;
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 260px;
+  width: max-content;
+  max-width: 340px;
+  padding: 10px;
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-line-strong);
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(32, 45, 58, 0.18);
+}
+
+.ds.is-open .ds-pop { display: block; }
+
+/* Filters at the right of the row would otherwise push the sheet off
+   the page and give the whole screen a horizontal scrollbar. */
+.ds-pop.is-right { left: auto; right: 0; }
+
+.ds-search {
+  width: 100%;
+  min-height: 44px;
+  margin-bottom: 8px;
+  padding: 0 12px;
+  background: var(--dash-panel-2);
+  border: 1px solid var(--dash-line);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--dash-text);
+}
+
+.ds-search::placeholder { color: var(--dash-faint); }
+.ds-search:focus { border-color: var(--dash-blue); outline: none; background: var(--dash-panel); }
+
+.ds-quick {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--dash-line);
+}
+
+.ds-quick button {
+  flex: 1;
+  min-height: 42px;
+  background: var(--dash-panel-2);
+  border: 1px solid var(--dash-line);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--dash-muted);
+  cursor: pointer;
+}
+
+.ds-quick button:hover {
+  background: var(--dash-panel-3);
+  border-color: var(--dash-line-strong);
+  color: var(--dash-text);
+}
+
+.ds-list {
+  max-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+/* A slim, quiet scrollbar instead of the wide default one. */
+.ds-list::-webkit-scrollbar { width: 8px; }
+.ds-list::-webkit-scrollbar-track { background: transparent; }
+.ds-list::-webkit-scrollbar-thumb {
+  background: var(--dash-line-strong);
+  border-radius: 999px;
+}
+.ds-list::-webkit-scrollbar-thumb:hover { background: var(--dash-muted); }
+.ds-list { scrollbar-width: thin; scrollbar-color: var(--dash-line-strong) transparent; }
+
+.ds-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin-bottom: 2px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--dash-text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ds-option:hover { background: var(--dash-panel-2); }
+
+/* Custom tick box. Keeps the real checkbox, hides its native paint. */
+.ds-option input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  background: var(--dash-panel);
+  border: 2px solid var(--dash-line-strong);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.ds-option input[type="checkbox"]:hover { border-color: var(--dash-blue); }
+
+.ds-option input[type="checkbox"]:checked {
+  background: var(--dash-blue);
+  border-color: var(--dash-blue);
+}
+
+.ds-option input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #FFFFFF;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+/* A chosen row is tinted, so a glance down the list reads instantly. */
+.ds-option:has(input:checked) {
+  background: #E8F0F6;
+  border-color: #C6DAE9;
+  color: var(--dash-text);
+  font-weight: 600;
+}
+
+.ds-option .ds-note {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--dash-faint);
+}
+
+/* "0 — don't use this filter": its own bar, in clay, below the list. */
+.ds-ignore {
+  margin-top: 10px;
+  margin-bottom: 0;
+  padding: 10px 12px;
+  min-height: 52px;
+  background: #FBF1EC;
+  border: 1px solid #E4C6B4;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--color-rust);
+}
+
+.ds-ignore:hover { background: #F7E6DC; }
+
+.ds-ignore input[type="checkbox"] {
+  border-color: #D3A488;
+  background: #FFFFFF;
+}
+
+.ds-ignore input[type="checkbox"]:hover { border-color: var(--color-rust); }
+
+.ds-ignore input[type="checkbox"]:checked {
+  background: var(--color-rust);
+  border-color: var(--color-rust);
+}
+
+.ds-option.ds-ignore:has(input:checked) {
+  background: #F4DCCE;
+  border-color: var(--color-rust);
+  color: var(--color-rust);
+}
+
+.ds-none {
+  padding: 14px 12px;
+  color: var(--dash-faint);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* ---------------- KPI cards ----------------
+   The figure is ink. Only the rail carries the tile's colour, so the
+   grid reads as one calm block rather than nine competing signals.
+*/
+
+.dash-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.kpi {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-sm);
+  padding-left: calc(var(--space-sm) + 6px);
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-line);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 2px rgba(32, 45, 58, 0.05);
+}
+
+.kpi::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 5px;
+  background: var(--kpi-accent, var(--dash-slate));
+}
+
+.kpi-gold   { --kpi-accent: var(--dash-gold); }
+.kpi-teal   { --kpi-accent: var(--dash-teal); }
+.kpi-blue   { --kpi-accent: var(--dash-blue); }
+.kpi-green  { --kpi-accent: var(--dash-green); }
+.kpi-plum   { --kpi-accent: var(--dash-plum); }
+.kpi-rust   { --kpi-accent: var(--dash-rust); }
+.kpi-indigo { --kpi-accent: var(--dash-indigo); }
+.kpi-muted  { --kpi-accent: var(--dash-line-strong); }
+
+.kpi-label {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--dash-muted);
+}
+
+.kpi-value {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.7rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--dash-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-muted .kpi-value { color: var(--dash-faint); }
+
+.kpi-sub {
+  margin: 6px 0 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--dash-muted);
+}
+
+.kpi-note {
+  margin: 2px 0 0;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--dash-faint);
+}
+
+/* ---------------- Cards and charts ---------------- */
+
+.dash-grid { display: grid; gap: var(--space-sm); margin-bottom: var(--space-sm); }
+.dash-grid-wide { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+
+@media (max-width: 900px) {
+  .dash-grid-wide { grid-template-columns: 1fr; }
+}
+
+.dash-card {
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  margin-bottom: var(--space-sm);
+  box-shadow: 0 1px 2px rgba(32, 45, 58, 0.05);
+}
+
+.dash-grid .dash-card { margin-bottom: 0; }
+
+.dash-card-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  color: var(--dash-text);
+}
+
+.dash-card-title span {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--dash-faint);
+}
+
+/* Chart marks: soft fills, darker strokes. Nothing at full saturation. */
+.dash-svg { width: 100%; height: auto; }
+
+.dash-bar { fill: var(--dash-fill-primary); }
+.dash-bar:hover { fill: var(--dash-blue); }
+
+.dash-line {
+  fill: none;
+  stroke: var(--dash-rust);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.dash-dot { fill: var(--dash-rust); }
+
+.dash-grid-line, .dash-grid { stroke: #E4EAF0; stroke-width: 1; }
+
+.dash-axis {
+  fill: var(--dash-faint);
+  font-family: var(--font-body);
+  font-size: 11px;
+}
+
+.dash-axis-alt { fill: var(--dash-rust); }
+
+.dash-empty {
+  padding: var(--space-md) 0;
+  text-align: center;
+  font-family: var(--font-display);
+  color: var(--dash-faint);
+}
+
+.dash-donut-wrap { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; }
+.dash-donut { width: 170px; height: 170px; flex: 0 0 auto; }
+
+.dash-legend { flex: 1 1 150px; list-style: none; margin: 0; padding: 0; }
+
+.dash-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--dash-text);
+}
+
+.dash-legend i { width: 12px; height: 12px; border-radius: 4px; flex: 0 0 auto; }
+.dash-legend span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-legend b { color: var(--dash-muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------------- Product ladder ---------------- */
+
+.dash-ladder { max-height: 360px; overflow-y: auto; }
+
+.rung {
+  display: grid;
+  grid-template-columns: 120px 1fr 150px;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: 10px;
+}
+
+.rung-name {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--dash-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rung-track {
+  position: relative;
+  display: block;
+  height: 22px;
+  background: var(--dash-panel-3);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.rung-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: var(--dash-fill-primary);
+  border-radius: 6px;
+}
+
+.rung-mark {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 3px;
+  background: var(--dash-rust);
+}
+
+.rung-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--dash-text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rung-value small {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: var(--dash-faint);
+}
+
+@media (max-width: 560px) {
+  .rung { grid-template-columns: 96px 1fr 104px; }
+}
+
+/* ---------------- Table ---------------- */
+
+.dash-table-scroll { overflow-x: auto; }
+
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+}
+
+.dash-table th,
+.dash-table td {
+  padding: 10px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--dash-line);
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-table th:first-child,
+.dash-table td:first-child {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: var(--dash-panel);
+}
+
+.dash-table thead th {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--dash-muted);
+  cursor: pointer;
+  background: var(--dash-panel-2);
+  border-bottom: 1px solid var(--dash-line-strong);
+}
+
+.dash-table thead th:first-child { background: var(--dash-panel-2); }
+.dash-table thead th:hover { color: var(--dash-text); }
+.dash-table thead th.is-sorted { color: var(--color-gold-dark); }
+
+.dash-table tbody tr:nth-child(even) td { background: #FAFCFD; }
+.dash-table tbody tr:nth-child(even) td:first-child { background: #FAFCFD; }
+.dash-table tbody tr:hover td { background: var(--dash-panel-3); }
+.dash-table tbody tr:hover td:first-child { background: var(--dash-panel-3); }
+
+.dash-table td.cell-name { font-family: var(--font-display); color: var(--dash-text); }
+.dash-table td.cell-name .unit { margin-left: 6px; font-style: normal; font-size: 0.72rem; color: var(--dash-faint); }
+.dash-table td.num { color: var(--dash-text); }
+.dash-table .nil { color: var(--dash-faint); }
+
+.dash-table tfoot td {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--dash-text);
+  background: var(--dash-panel-2);
+  border-top: 1px solid var(--dash-line-strong);
+  border-bottom: none;
+}
+
+.dash-table tfoot td:first-child { background: var(--dash-panel-2); }
+
+.dash-table .chip {
+  display: inline-block;
+  min-width: 54px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.dash-table .chip-sales { background: #E8F0F6; color: var(--dash-blue); }
+.dash-table .chip-cust  { background: #F1EEE9; color: var(--color-gold-dark); }
+
+/* ---------------- Notes, placeholders, busy ---------------- */
+
+.dash-note-card {
+  margin-bottom: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-line);
+  border-left: 4px solid var(--dash-slate);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--dash-muted);
+}
+
+.dash-note-card.is-error {
+  background: var(--color-error-bg);
+  border-color: #E7C4BF;
+  border-left-color: var(--color-error);
+}
+
+.dash-note-card h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--dash-slate);
+}
+
+.dash-note-card.is-error h3 { color: var(--color-error); }
+.dash-note-card ul { margin: 0; padding-left: 18px; }
+.dash-note-card li { margin-bottom: 4px; }
+.dash-note-card p { margin: 0; }
+
+.dash-footnote {
+  margin: var(--space-sm) 0 0;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--dash-faint);
+}
+
+.dash-placeholder {
+  padding: var(--space-lg);
+  text-align: center;
+  background: var(--dash-panel);
+  border: 2px dashed var(--dash-line-strong);
+  border-radius: var(--radius-lg);
+}
+
+.dash-placeholder h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--dash-muted);
+}
+
+.dash-placeholder p {
+  margin: 0 auto;
+  max-width: 460px;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--dash-faint);
+}
+
+.dash-busy {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  align-items: center;
+  justify-content: center;
+  background: rgba(238, 242, 246, 0.72);
+}
+
+.dash-spinner {
+  width: 42px;
+  height: 42px;
+  border: 4px solid var(--dash-line);
+  border-top-color: var(--color-gold);
+  border-radius: 50%;
+  animation: dash-spin 0.8s linear infinite;
+}
+
+@keyframes dash-spin { to { transform: rotate(360deg); } }
+
+.dash-page a:focus-visible,
+.dash-page button:focus-visible,
+.dash-page input:focus-visible,
+.ds-pop button:focus-visible,
+.ds-pop input:focus-visible {
+  outline: 3px solid var(--dash-focus);
+  outline-offset: 2px;
+}

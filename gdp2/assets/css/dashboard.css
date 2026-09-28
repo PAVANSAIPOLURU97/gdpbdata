@@ -1,0 +1,171 @@
+/*
+  dashboard.css
+  Shared "app shell" styles: top bar + tile grid (dashboard.html)
+  and the simple page header used by every file in /pages/.
+*/
+
+.app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-card);
+  border-bottom: 3px solid var(--color-gold);
+}
+
+.app-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.app-topbar-left img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--color-gold);
+  background: var(--color-gold-soft);
+}
+
+.app-topbar-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--color-cocoa);
+  line-height: 1.1;
+}
+
+.app-topbar-user {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-cocoa-soft);
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 var(--space-sm);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  border: 2px solid var(--color-error);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.logout-button img { width: 22px; height: 22px; }
+.logout-button:hover { background: var(--color-error); color: #fff; }
+
+/* --- Tile grid (dashboard.html) --- */
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-md);
+  padding: var(--space-md);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: 160px;
+  border-radius: var(--radius-lg);
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  text-align: center;
+  padding: var(--space-sm);
+}
+
+.tile:active { transform: translateY(2px); box-shadow: var(--shadow-press); }
+
+.tile-icon-frame {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tile-icon-frame img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.tile-master       { background: var(--color-slate); }
+.tile-milkInput     { background: var(--color-milk-blue); }
+.tile-procurement   { background: var(--color-green); }
+.tile-productsMade  { background: var(--color-plum); }
+.tile-sales         { background: var(--color-amber); }
+.tile-paymentPending { background: var(--color-rust); }
+.tile-orders        { background: var(--color-indigo); }
+.tile-dashboards    { background: var(--color-teal); }
+
+/* Master sub-tabs — same color meaning as their related main tab above */
+.tile-units          { background: var(--color-slate); }
+.tile-milkMaster     { background: var(--color-milk-blue); }
+.tile-rawMaterials   { background: var(--color-green); }
+.tile-productMaster  { background: var(--color-plum); }
+.tile-employeeMaster { background: var(--color-teal); }
+
+.empty-state {
+  text-align: center;
+  font-family: var(--font-display);
+  color: var(--color-cocoa-soft);
+  padding: var(--space-lg);
+}
+
+/* --- Shared shell for every page in /pages/ --- */
+.page-body {
+  padding: var(--space-md);
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 0 var(--space-md);
+  margin-top: var(--space-md);
+  background: var(--color-gold);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.back-button:hover { background: var(--color-gold-dark); }
+
+.coming-soon-box {
+  margin-top: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--color-card);
+  border: 3px dashed var(--color-gold-soft);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-display);
+  color: var(--color-cocoa-soft);
+  font-size: var(--text-lg);
+}

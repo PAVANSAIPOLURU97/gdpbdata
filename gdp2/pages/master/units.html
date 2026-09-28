@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Units — Pavan's Golden Dairy Products</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../../assets/css/variables.css">
+<link rel="stylesheet" href="../../assets/css/dashboard.css">
+<link rel="stylesheet" href="../../assets/css/forms.css">
+</head>
+<body>
+
+<header class="app-topbar">
+  <div class="app-topbar-left">
+    <img id="appLogo" alt="">
+    <div class="app-topbar-title">Units</div>
+  </div>
+  <button class="logout-button" id="logoutBtn" type="button">
+    <img id="logoutIcon" alt="">Log Out
+  </button>
+</header>
+
+<main class="master-form-page">
+  <div class="master-columns">
+
+    <section class="form-panel">
+      <h2>Add a Unit</h2>
+      <form id="unitForm">
+        <div class="form-group">
+          <label for="unitName">Unit Name</label>
+          <input type="text" id="unitName" placeholder="e.g. Litre, Kg, Piece" required>
+        </div>
+        <div class="form-group">
+          <label for="factor">Factor (base units this equals)</label>
+          <input type="number" id="factor" step="0.0001" min="0.0001" placeholder="e.g. Kg=1000, gms=1, Litre=1000, ml=1, piece=1" required>
+        </div>
+        <div class="form-group">
+          <label for="family">Family</label>
+          <select id="family" required>
+            <option value="">Select family</option>
+            <option value="weight">Weight (Kg, gms)</option>
+            <option value="volume">Volume (Litre, ml)</option>
+            <option value="count">Count (piece, nos)</option>
+          </select>
+        </div>
+        <button type="submit" class="primary-button" id="submitBtn">Add Unit</button>
+        <div class="form-status" id="formStatus"></div>
+      </form>
+    </section>
+
+    <section class="list-panel">
+      <h2>Available Units</h2>
+      <div id="listArea"><p class="list-loading">Loading...</p></div>
+    </section>
+
+  </div>
+
+  <div style="text-align:center;">
+    <a class="back-button" href="../master.html">&#8592; Back to Master</a>
+  </div>
+</main>
+
+<script>const BASE_PATH = "../../";</script>
+<script src="../../assets/js/config.js"></script>
+<script src="../../assets/js/users-data.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/master/master-common.js"></script>
+<script src="../../assets/js/master/units.js"></script>
+</body>
+</html>

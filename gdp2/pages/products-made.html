@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pavan's Golden Dairy Products — Products Made</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../assets/css/variables.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<link rel="stylesheet" href="../assets/css/forms.css">
+</head>
+<body>
+
+<header class="app-topbar">
+  <div class="app-topbar-left">
+    <img id="appLogo" alt="">
+    <div>
+      <div class="app-topbar-title">Products Made</div>
+      <div class="app-topbar-user" id="userLabel"></div>
+    </div>
+  </div>
+  <button class="logout-button" id="logoutBtn" type="button">
+    <img id="logoutIcon" alt="">Log Out
+  </button>
+</header>
+
+<main class="master-form-page">
+  <div class="master-columns">
+
+    <section class="form-panel">
+      <h2>Add Products Made Entry</h2>
+      <form id="productsMadeForm" autocomplete="off">
+
+        <div class="form-group">
+          <label for="entryDateTime">Date &amp; Time</label>
+          <input type="datetime-local" id="entryDateTime" required>
+        </div>
+
+        <div class="form-group">
+          <label for="productName">Product</label>
+          <select id="productName" required></select>
+        </div>
+
+        <div class="form-group">
+          <label for="startTime">Product Making Start Time</label>
+          <input type="time" id="startTime" required>
+        </div>
+
+        <h3 style="font-family: var(--font-display); font-size: var(--text-md); color: var(--color-cocoa); margin: var(--space-sm) 0 var(--space-xs);">
+          Raw Materials Used
+        </h3>
+        <div id="blocksContainer"></div>
+        <button type="button" class="secondary-button" id="addBlockBtn">+ Add Another Raw Material</button>
+
+        <div class="form-group">
+          <label for="quantityProduced">Quantity Produced</label>
+          <input type="number" id="quantityProduced" inputmode="decimal" step="0.001" min="0.001" placeholder="e.g. 12.500" required>
+        </div>
+
+        <div class="form-group">
+          <label for="producedUnit">Unit</label>
+          <select id="producedUnit" required></select>
+        </div>
+
+        <div class="form-group">
+          <label for="madeBy">Made By</label>
+          <select id="madeBy" required></select>
+        </div>
+
+        <div class="form-group">
+          <label for="quality">Quality (1&ndash;10)</label>
+          <select id="quality" required>
+            <option value="">Select quality</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="remarks">Remarks *</label>
+          <textarea id="remarks" placeholder="Any notes about this batch" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="endTime">Product Made End Time</label>
+          <input type="time" id="endTime" required>
+        </div>
+
+        <button type="button" class="secondary-button" id="refreshOptionsBtn">&#8635; Refresh Products / Raw Materials / Units / Employees</button>
+        <button type="submit" class="primary-button" id="submitBtn">Save Entry</button>
+        <div class="form-status" id="formStatus"></div>
+      </form>
+    </section>
+
+    <section class="list-panel">
+      <h2 id="listDateHeading">Products Made</h2>
+      <div id="listArea"></div>
+      <div id="totalArea"></div>
+    </section>
+
+  </div>
+
+  <a class="back-button" href="../dashboard.html">&larr; Back to Dashboard</a>
+</main>
+
+<script>const BASE_PATH = "../";</script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/users-data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/master/master-common.js"></script>
+<script src="../assets/js/products-made.js"></script>
+</body>
+</html>

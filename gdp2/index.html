@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pavan's Golden Dairy Products — Login</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="assets/css/variables.css">
+<link rel="stylesheet" href="assets/css/login.css">
+</head>
+<body>
+
+<main class="login-screen">
+  <form class="login-card" id="loginForm" autocomplete="off">
+
+    <div class="login-logo-frame">
+      <img id="appLogo" alt="">
+    </div>
+
+    <h1 class="login-title">Pavan's Golden Dairy Products</h1>
+    <p class="login-subtitle">Please log in to continue</p>
+
+    <div class="login-error" id="loginError">
+      <span class="icon-circle">!</span>
+      <span id="loginErrorText">User ID or Password is incorrect.</span>
+    </div>
+
+    <div class="login-field">
+      <label for="userId"><img id="userIcon" alt="">User ID</label>
+      <input type="text" id="userId" name="userId" inputmode="text" placeholder="Enter User ID" autocomplete="username">
+    </div>
+
+    <div class="login-field">
+      <label for="password"><img id="lockIcon" alt="">Password</label>
+      <input type="password" id="password" name="password" placeholder="Enter Password" autocomplete="current-password">
+    </div>
+
+    <button type="submit" class="login-button">Log In</button>
+  </form>
+</main>
+
+<script>const BASE_PATH = "";</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/users-data.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+  // Set images from config.js paths
+  setImage(document.getElementById("appLogo"), "appLogo");
+  setImage(document.getElementById("userIcon"), "userIcon");
+  setImage(document.getElementById("lockIcon"), "lockIcon");
+
+  // If already logged in, skip straight to dashboard
+  if (getSession()) {
+    window.location.href = APP_CONFIG.dashboardPage;
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const userId = document.getElementById("userId").value;
+    const password = document.getElementById("password").value;
+    const result = attemptLogin(userId, password);
+
+    const errorBox = document.getElementById("loginError");
+    if (result.success) {
+      errorBox.classList.remove("show");
+      window.location.href = APP_CONFIG.dashboardPage;
+    } else {
+      document.getElementById("loginErrorText").textContent = result.message;
+      errorBox.classList.add("show");
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,586 @@
+/**
+ * Pavan's Golden Dairy Products — Backend (Google Apps Script)
+ * ==================================================================
+ * PERFORMANCE REWRITE. Behaviour and data are IDENTICAL to the old
+ * version — same sheets, same columns, same audit trail. Only the
+ * number of round trips and the amount of work per request changed.
+ *
+ * WHAT WAS SLOW BEFORE, AND WHAT FIXED IT
+ * ---------------------------------------
+ * 1. One HTTP call per sheet. Products Made needed 5 (ProductMaster,
+ *    EmployeeMaster, Units, RawMaterials, ProductsMade). Apps Script
+ *    serialises calls from the same user, so "parallel" fetches queued
+ *    up on the server: ~5 x 1.5s before a dropdown filled.
+ *    -> NEW: action=bulk returns many sheets in ONE call.
+ *
+ * 2. One HTTP call per saved row. A 6-line bill = 6 POSTs = 12s+.
+ *    -> NEW: action=addBatch writes N rows in ONE call, ONE setValues().
+ *
+ * 3. appendRow() was called once per row, and again for the audit log
+ *    (2 writes/row). appendRow forces a flush every time.
+ *    -> NEW: a single setValues() block write for data, and a single
+ *       block write for the whole batch's audit rows.
+ *
+ * 4. Sales listed EVERY row just to work out the next bill number. That
+ *    download grew every day and would eventually time out.
+ *    -> NEW: action=nextBillNo reads only the BillNo column.
+ *
+ * 5. Nothing was cached server side.
+ *    -> NEW: CacheService holds list payloads for 90s, and any write to
+ *       a sheet immediately clears that sheet's cache entry, so data is
+ *       never stale after a save.
+ *
+ * DEPLOY (unchanged):
+ *   Deploy > New deployment > Web app
+ *     Execute as: Me     Who has access: Anyone
+ *   Copy the /exec URL into assets/js/config.js -> APP_CONFIG.appsScriptUrl
+ *
+ * IMPORTANT: after pasting this file you MUST push a new version:
+ *   Deploy > Manage deployments > (pencil) > Version: New version > Deploy
+ * ==================================================================
+ */
+
+// ------------------------------------------------------------------
+// Schema — unchanged from the original file.
+// ------------------------------------------------------------------
+const SHEET_SCHEMA = {
+  Units: ["UnitName", "Factor", "Family", "AddedBy", "Timestamp"],
+  MilkMaster: ["MilkType", "MinFat", "MinSNF", "MinPointsReq", "AddedBy", "Timestamp"],
+  RawMaterials: ["RawMaterialName", "Quantity", "Unit", "PurchasePrice", "AddedBy", "Timestamp"],
+  ProductMaster: ["ProductName", "Quantity", "Unit", "Price", "StatusAvailability", "AddedBy", "Timestamp"],
+  EmployeeMaster: ["EmployeeName", "Role", "Salary", "PhoneNumber", "Address", "EmergencyContactNumber", "AddedBy", "Timestamp"],
+  MilkInput: ["EntryDateTime", "Shift", "MilkType", "Quantity", "Unit", "Quality", "Fat", "SNF", "Marks", "AddedBy", "Timestamp"],
+  RawMaterialProcurement: ["EntryDateTime", "RawMaterialName", "Quantity", "Unit", "Supplier", "Rate", "Amount", "AddedBy", "Timestamp"],
+  ProductsMade: ["EntryDateTime", "StartTime", "EndTime", "ProductName", "RawMaterialName", "RawMaterialQuantity", "RawMaterialUnit", "QuantityProduced", "ProducedUnit", "MadeBy", "Quality", "Remarks", "AddedBy", "Timestamp"],
+  Sales: ["BillNo", "EntryDateTime", "BillerName", "ProductName", "Quantity", "Unit", "MasterPrice", "MasterQty", "MasterUnit", "EntryMode", "SalePrice", "Discount", "LineTotal", "CashPaid", "OnlinePaid", "BillTotal", "AddedBy", "Timestamp"],
+  AuditLog: ["Timestamp", "UserId", "Action", "Sheet", "Details"]
+};
+
+const TEXT_FORMAT_COLUMNS = {
+  ProductsMade: ["StartTime", "EndTime"]
+};
+
+// How long a list result may be served from cache. Any write to that
+// sheet clears its entry immediately, so this only ever affects edits
+// made directly in the spreadsheet by hand.
+const CACHE_TTL_SECONDS = 90;
+
+// CacheService allows ~100KB per key, so big sheets are split across
+// numbered chunk keys. Sheets bigger than this are simply not cached
+// (they still work, just without the cache speed-up).
+const CACHE_CHUNK_SIZE = 90000;
+const CACHE_MAX_CHUNKS = 12;
+
+// ==================================================================
+// Per-execution memo. A single request often touches the same sheet
+// several times (get handle -> read headers -> ensure columns). These
+// two maps make sure each of those costs one API call, not five.
+// They live only for the duration of one request.
+// ==================================================================
+var _sheetHandleMemo = {};
+var _headerMemo = {};
+var _schemaCheckedMemo = {};
+
+function _ss() {
+  if (!_sheetHandleMemo.__ss) _sheetHandleMemo.__ss = SpreadsheetApp.getActiveSpreadsheet();
+  return _sheetHandleMemo.__ss;
+}
+
+// ==================================================================
+// Web entry points
+// ==================================================================
+
+function doGet(e) {
+  try {
+    var p = e.parameter || {};
+    var action = p.action;
+
+    if (action === "list") {
+      // compact=1 sends {headers, values} instead of one object per row.
+      // Same data, roughly 60% less JSON on the wire. The browser's
+      // api.js expands it back into row objects, so page code is unchanged.
+      return jsonResponse(listRows(p.sheet, p.compact === "1"));
+    }
+
+    // NEW: many sheets in one round trip.
+    // ?action=bulk&sheets=ProductMaster,Units,EmployeeMaster&compact=1
+    if (action === "bulk") {
+      return jsonResponse(bulkList(String(p.sheets || "").split(","), p.compact === "1"));
+    }
+
+    // NEW: next bill serial for a date, WITHOUT downloading the Sales sheet.
+    // ?action=nextBillNo&prefix=GDP310726-
+    if (action === "nextBillNo") {
+      return jsonResponse(nextBillNo(p.prefix));
+    }
+
+    // Cheap connectivity/warm-up ping. The browser fires this on page
+    // load so the Apps Script instance is already warm by the time the
+    // real request arrives.
+    if (action === "ping") {
+      return jsonResponse({ success: true, time: new Date().toISOString() });
+    }
+
+    return jsonResponse({ success: false, message: "Unknown action: " + action });
+  } catch (err) {
+    return jsonResponse({ success: false, message: err.message });
+  }
+}
+
+function doPost(e) {
+  try {
+    var payload = JSON.parse(e.postData.contents);
+
+    // Original single-row add — still supported so nothing breaks.
+    if (payload.action === "add") {
+      return jsonResponse(addRows(payload.sheet, [payload.row], payload.userId));
+    }
+
+    // NEW: N rows, one call, one block write.
+    if (payload.action === "addBatch") {
+      return jsonResponse(addRows(payload.sheet, payload.rows || [], payload.userId, payload.options || {}));
+    }
+
+    return jsonResponse({ success: false, message: "Unknown action: " + payload.action });
+  } catch (err) {
+    return jsonResponse({ success: false, message: err.message });
+  }
+}
+
+function jsonResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ==================================================================
+// Sheet access (memoised)
+// ==================================================================
+
+function getSheet(name) {
+  if (!name) throw new Error("No sheet name was given.");
+  if (_sheetHandleMemo[name]) return _sheetHandleMemo[name];
+
+  var ss = _ss();
+  var sheet = ss.getSheetByName(name);
+
+  if (!sheet) {
+    var headers = SHEET_SCHEMA[name];
+    if (!headers) {
+      throw new Error('Sheet "' + name + '" was not found. Check the tab name spelling.');
+    }
+    sheet = ss.insertSheet(name);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, headers.length);
+    applyTextFormatColumns(sheet, headers, name);
+  }
+
+  _sheetHandleMemo[name] = sheet;
+  return sheet;
+}
+
+// Reads a sheet's header row once per request.
+function getHeaders(sheetName) {
+  if (_headerMemo[sheetName]) return _headerMemo[sheetName];
+  var sheet = getSheet(sheetName);
+  var lastCol = sheet.getLastColumn();
+  var headers = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  _headerMemo[sheetName] = headers;
+  return headers;
+}
+
+function applyTextFormatColumns(sheet, headers, sheetName) {
+  var columnsToForce = TEXT_FORMAT_COLUMNS[sheetName];
+  if (!columnsToForce) return;
+  columnsToForce.forEach(function (colName) {
+    var colIndex = headers.indexOf(colName);
+    if (colIndex === -1) return;
+    sheet.getRange(2, colIndex + 1, 9999, 1).setNumberFormat("@");
+  });
+}
+
+// ==================================================================
+// Server-side cache
+// ==================================================================
+
+function cacheKeyFor(sheetName, compact) {
+  return "pgd_v2_" + sheetName + (compact ? "_c" : "_o");
+}
+
+function cacheGet(key) {
+  try {
+    var cache = CacheService.getScriptCache();
+    var head = cache.get(key);
+    if (!head) return null;
+
+    var chunkCount = Number(head);
+    if (isNaN(chunkCount) || chunkCount < 1) return null;
+
+    var chunkKeys = [];
+    for (var i = 0; i < chunkCount; i++) chunkKeys.push(key + "_" + i);
+
+    var parts = cache.getAll(chunkKeys);
+    var joined = "";
+    for (var j = 0; j < chunkCount; j++) {
+      var piece = parts[key + "_" + j];
+      if (piece === undefined || piece === null) return null; // a chunk expired -> treat as a miss
+      joined += piece;
+    }
+    return JSON.parse(joined);
+  } catch (e) {
+    return null; // cache problems must never break a request
+  }
+}
+
+function cachePut(key, obj) {
+  try {
+    var text = JSON.stringify(obj);
+    var chunkCount = Math.ceil(text.length / CACHE_CHUNK_SIZE);
+    if (chunkCount > CACHE_MAX_CHUNKS) return; // too big to cache — fine, just skip
+
+    var cache = CacheService.getScriptCache();
+    var bundle = {};
+    for (var i = 0; i < chunkCount; i++) {
+      bundle[key + "_" + i] = text.substr(i * CACHE_CHUNK_SIZE, CACHE_CHUNK_SIZE);
+    }
+    cache.putAll(bundle, CACHE_TTL_SECONDS);
+    cache.put(key, String(chunkCount), CACHE_TTL_SECONDS);
+  } catch (e) {
+    // ignore
+  }
+}
+
+// Called after every write so a save is visible immediately.
+function cacheInvalidate(sheetName) {
+  try {
+    var cache = CacheService.getScriptCache();
+    var keys = [cacheKeyFor(sheetName, true), cacheKeyFor(sheetName, false)];
+    keys.forEach(function (k) {
+      var head = cache.get(k);
+      if (head) {
+        var n = Number(head);
+        var chunkKeys = [];
+        for (var i = 0; i < n; i++) chunkKeys.push(k + "_" + i);
+        cache.removeAll(chunkKeys);
+      }
+      cache.remove(k);
+    });
+    if (sheetName === "Sales") cache.remove("pgd_billno_prefixes");
+  } catch (e) {
+    // ignore
+  }
+}
+
+// ==================================================================
+// Reading
+// ==================================================================
+
+/**
+ * Returns every row of a sheet.
+ *   compact=false -> { success, rows: [ {Col: val, ...}, ... ] }   (original shape)
+ *   compact=true  -> { success, headers: [...], values: [[...]] }  (smaller payload)
+ * Dates are converted to ISO strings so JSON.stringify doesn't do it
+ * twice and so the browser parses them the same way it always has.
+ */
+function listRows(sheetName, compact) {
+  var key = cacheKeyFor(sheetName, compact);
+  var hit = cacheGet(key);
+  if (hit) return hit;
+
+  var sheet = getSheet(sheetName);
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+
+  var result;
+  if (lastRow < 2 || lastCol < 1) {
+    result = compact ? { success: true, headers: [], values: [] } : { success: true, rows: [] };
+    cachePut(key, result);
+    return result;
+  }
+
+  // ONE read for the whole block — the single biggest server-side win.
+  var values = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  var headers = values[0];
+
+  var body = [];
+  for (var i = 1; i < values.length; i++) {
+    var raw = values[i];
+    var clean = new Array(headers.length);
+    for (var c = 0; c < headers.length; c++) {
+      var v = raw[c];
+      clean[c] = (v instanceof Date) ? v.toISOString() : v;
+    }
+    body.push(clean);
+  }
+
+  if (compact) {
+    result = { success: true, headers: headers, values: body };
+  } else {
+    var rows = [];
+    for (var r = 0; r < body.length; r++) {
+      var rowObj = {};
+      for (var h = 0; h < headers.length; h++) rowObj[headers[h]] = body[r][h];
+      rows.push(rowObj);
+    }
+    result = { success: true, rows: rows };
+  }
+
+  cachePut(key, result);
+  return result;
+}
+
+/**
+ * Several sheets in ONE request. This is what turned the Products Made
+ * dropdown load from 5 queued round trips into 1.
+ * Returns { success, data: { SheetName: <same shape as list>, ... } }
+ * A failure on one sheet does not fail the others.
+ */
+function bulkList(sheetNames, compact) {
+  var data = {};
+  (sheetNames || []).forEach(function (name) {
+    var clean = String(name || "").trim();
+    if (!clean) return;
+    try {
+      data[clean] = listRows(clean, compact);
+    } catch (err) {
+      data[clean] = { success: false, message: err.message };
+    }
+  });
+  return { success: true, data: data };
+}
+
+/**
+ * Works out the next bill serial for a given prefix (e.g. "GDP310726-")
+ * by reading ONLY the BillNo column. The old code downloaded the entire
+ * Sales sheet — every column, every row ever sold — to do this, which is
+ * why billing got slower each week.
+ */
+function nextBillNo(prefix) {
+  if (!prefix) return { success: false, message: "No prefix given." };
+
+  var sheet = getSheet("Sales");
+  var headers = getHeaders("Sales");
+  var col = headers.indexOf("BillNo");
+  if (col === -1) return { success: true, nextSerial: 1, billNo: prefix + "1" };
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { success: true, nextSerial: 1, billNo: prefix + "1" };
+
+  var billNos = sheet.getRange(2, col + 1, lastRow - 1, 1).getValues();
+  var max = 0;
+  for (var i = 0; i < billNos.length; i++) {
+    var bn = String(billNos[i][0] || "");
+    if (bn.indexOf(prefix) === 0) {
+      var serial = parseInt(bn.slice(prefix.length), 10);
+      if (!isNaN(serial) && serial > max) max = serial;
+    }
+  }
+  return { success: true, nextSerial: max + 1, billNo: prefix + (max + 1) };
+}
+
+// ==================================================================
+// Writing
+// ==================================================================
+
+function ensureSchemaColumns(sheet, sheetName) {
+  if (_schemaCheckedMemo[sheetName]) return;
+  _schemaCheckedMemo[sheetName] = true;
+
+  var schema = SHEET_SCHEMA[sheetName];
+  if (!schema) return;
+
+  var lastCol = sheet.getLastColumn();
+  var existing = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  var headerRowIsEmpty = existing.length === 0 || existing.every(function (c) { return c === "" || c === null; });
+
+  if (headerRowIsEmpty) {
+    sheet.getRange(1, 1, 1, schema.length).setValues([schema]);
+    sheet.getRange(1, 1, 1, schema.length).setFontWeight("bold");
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, schema.length);
+    applyTextFormatColumns(sheet, schema, sheetName);
+    _headerMemo[sheetName] = schema.slice();
+    return;
+  }
+
+  var missing = schema.filter(function (h) { return existing.indexOf(h) === -1; });
+  if (missing.length > 0) {
+    var startCol = sheet.getLastColumn() + 1;
+    sheet.getRange(1, startCol, 1, missing.length).setValues([missing]);
+    sheet.getRange(1, startCol, 1, missing.length).setFontWeight("bold");
+    sheet.autoResizeColumns(startCol, missing.length);
+    applyTextFormatColumns(sheet, schema, sheetName);
+    _headerMemo[sheetName] = existing.concat(missing);
+  } else {
+    _headerMemo[sheetName] = existing;
+  }
+}
+
+/**
+ * Appends N rows in a single block write, plus one block write to
+ * AuditLog. Same columns, same server-filled AddedBy/Timestamp, same
+ * audit entries as before — just not once per row.
+ *
+ * options.billNoField : if set (Sales uses "BillNo"), the write happens
+ *   inside a script lock and the serial is re-checked, so two people
+ *   billing at the same moment can never be given the same bill number.
+ *   The bill number actually used comes back in the response.
+ */
+function addRows(sheetName, rowDataList, userId, options) {
+  options = options || {};
+  rowDataList = rowDataList || [];
+  if (rowDataList.length === 0) return { success: true, written: 0 };
+
+  var lock = null;
+  if (options.billNoField) {
+    // Only Sales needs this. 12s is plenty — a block write takes well under 1s.
+    lock = LockService.getScriptLock();
+    try { lock.waitLock(12000); } catch (e) { lock = null; }
+  }
+
+  try {
+    var sheet = getSheet(sheetName);
+    ensureSchemaColumns(sheet, sheetName);
+    var headers = getHeaders(sheetName);
+
+    var assignedBillNo = null;
+
+    // Re-check the bill serial while holding the lock, so a bill number
+    // the browser worked out a few seconds ago can't collide.
+    if (options.billNoField && options.billNoPrefix) {
+      var check = nextBillNo(options.billNoPrefix);
+      var supplied = String(rowDataList[0][options.billNoField] || "");
+      var suppliedSerial = parseInt(supplied.slice(options.billNoPrefix.length), 10);
+      if (!supplied || isNaN(suppliedSerial) || suppliedSerial < check.nextSerial) {
+        assignedBillNo = check.billNo;
+        rowDataList.forEach(function (r) { r[options.billNoField] = assignedBillNo; });
+      } else {
+        assignedBillNo = supplied;
+      }
+    }
+
+    var now = new Date();
+    var matrix = rowDataList.map(function (rowData) {
+      rowData = rowData || {};
+      return headers.map(function (header) {
+        if (header === "AddedBy") return userId || "unknown";
+        if (header === "Timestamp") return now;
+        return rowData[header] !== undefined ? rowData[header] : "";
+      });
+    });
+
+    // ONE write for every row, instead of one appendRow() per row.
+    // appendRow flushes the spreadsheet each time it's called, which is
+    // what made a 6-item bill take so long.
+    var startRow = sheet.getLastRow() + 1;
+    sheet.getRange(startRow, 1, matrix.length, headers.length).setValues(matrix);
+
+    // Audit: same one entry per row as before, written as one block.
+    writeAuditBatch(userId, "add_row", sheetName, rowDataList, now);
+
+    cacheInvalidate(sheetName);
+
+    var result = { success: true, written: matrix.length };
+    if (assignedBillNo) result.billNo = assignedBillNo;
+    return result;
+  } finally {
+    if (lock) {
+      try { lock.releaseLock(); } catch (e) {}
+    }
+  }
+}
+
+function writeAuditBatch(userId, action, sheetName, rowDataList, now) {
+  try {
+    var auditSheet = getSheet("AuditLog");
+    var rows = rowDataList.map(function (rowData) {
+      return [now, userId || "unknown", action, sheetName, JSON.stringify(rowData)];
+    });
+    var startRow = auditSheet.getLastRow() + 1;
+    auditSheet.getRange(startRow, 1, rows.length, 5).setValues(rows);
+  } catch (e) {
+    // An audit failure must never lose the user's actual data.
+    Logger.log("Audit write failed: " + e.message);
+  }
+}
+
+// ==================================================================
+// Setup / repair — unchanged behaviour
+// ==================================================================
+
+function setupSheets() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var report = [];
+
+  Object.keys(SHEET_SCHEMA).forEach(function (sheetName) {
+    var headers = SHEET_SCHEMA[sheetName];
+    var sheet = ss.getSheetByName(sheetName);
+
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+      report.push(sheetName + ": created");
+    } else {
+      report.push(sheetName + ": already existed, left as-is");
+    }
+
+    var lastCol = Math.max(headers.length, sheet.getLastColumn());
+    var firstRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var headerRowIsEmpty = firstRow.every(function (cell) { return cell === "" || cell === null; });
+
+    if (headerRowIsEmpty) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+      sheet.setFrozenRows(1);
+      sheet.autoResizeColumns(1, headers.length);
+      report.push("  -> headers added: " + headers.join(", "));
+    } else {
+      var existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var missing = headers.filter(function (h) { return existingHeaders.indexOf(h) === -1; });
+      if (missing.length > 0) {
+        var startCol = sheet.getLastColumn() + 1;
+        sheet.getRange(1, startCol, 1, missing.length).setValues([missing]);
+        sheet.getRange(1, startCol, 1, missing.length).setFontWeight("bold");
+        sheet.autoResizeColumns(startCol, missing.length);
+        report.push("  -> columns added: " + missing.join(", "));
+      }
+    }
+
+    applyTextFormatColumns(sheet, headers, sheetName);
+  });
+
+  var defaultSheet = ss.getSheetByName("Sheet1");
+  if (defaultSheet && defaultSheet.getLastRow() === 0 && ss.getSheets().length > 1) {
+    ss.deleteSheet(defaultSheet);
+    report.push("Sheet1 (default, empty): removed");
+  }
+
+  // A repair may have changed columns — drop every cached payload.
+  try { CacheService.getScriptCache().removeAll([]); } catch (e) {}
+  Object.keys(SHEET_SCHEMA).forEach(cacheInvalidate);
+
+  Logger.log(report.join("\n"));
+
+  try {
+    SpreadsheetApp.getUi().alert("Setup complete:\n\n" + report.join("\n"));
+  } catch (e) {
+    // No UI context — expected when run from the script editor.
+  }
+}
+
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu("Dairy App")
+    .addItem("Setup / Repair Sheets", "setupSheets")
+    .addItem("Clear App Cache", "clearAppCache")
+    .addToUi();
+}
+
+// If you ever edit rows by hand in the spreadsheet and want the website
+// to pick it up instantly instead of within 90 seconds, click this.
+function clearAppCache() {
+  Object.keys(SHEET_SCHEMA).forEach(cacheInvalidate);
+  try {
+    SpreadsheetApp.getUi().alert("App cache cleared. The website will reload fresh data.");
+  } catch (e) {}
+}

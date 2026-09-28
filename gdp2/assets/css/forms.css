@@ -1,0 +1,445 @@
+/*
+  forms.css
+  Shared styles for any "add data + see list" page — used by every
+  page under pages/master/, and reusable later for Milk Input, Raw
+  Material Procurement, Products Made, and Sales.
+*/
+
+.master-form-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+.master-columns {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .master-columns { grid-template-columns: 1fr; }
+}
+
+.form-panel, .list-panel {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-soft);
+}
+
+.form-panel h2, .list-panel h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  margin: 0 0 var(--space-sm);
+  color: var(--color-cocoa);
+}
+
+.form-group {
+  margin-bottom: var(--space-sm);
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-md);
+  margin-bottom: 6px;
+  color: var(--color-cocoa);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  min-height: var(--tap-min);
+  font-size: var(--text-md);
+  font-family: var(--font-body);
+  padding: 10px var(--space-sm);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-gold-soft);
+  background: var(--color-cream);
+  color: var(--color-cocoa);
+}
+
+.form-group textarea { min-height: 90px; resize: vertical; }
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--color-gold);
+  background: var(--color-card);
+}
+
+.primary-button {
+  width: 100%;
+  min-height: var(--tap-min);
+  margin-top: var(--space-xs);
+  background: var(--color-gold);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: var(--shadow-press);
+}
+
+.primary-button:hover:not(:disabled) { background: var(--color-gold-dark); }
+.primary-button:disabled { opacity: 0.6; cursor: default; }
+
+.form-status {
+  display: none;
+  margin-top: var(--space-sm);
+  padding: 10px var(--space-sm);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.form-status-success { display: block; background: var(--color-success-bg); color: var(--color-success); }
+.form-status-error   { display: block; background: var(--color-error-bg); color: var(--color-error); }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+}
+
+.data-table th, .data-table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--color-gold-soft);
+}
+
+.data-table th {
+  font-family: var(--font-display);
+  color: var(--color-cocoa-soft);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.list-empty, .list-loading {
+  text-align: center;
+  font-family: var(--font-display);
+  color: var(--color-cocoa-soft);
+  padding: var(--space-md) 0;
+}
+
+/* --- Repeatable line-item blocks (Milk Input today; Raw Material
+   Procurement / Products Made / Sales will reuse this same pattern) --- */
+.repeatable-block {
+  position: relative;
+  border: 2px dashed var(--color-gold-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  padding-top: calc(var(--space-sm) + 8px);
+  margin-bottom: var(--space-sm);
+}
+
+.repeatable-block-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.secondary-button {
+  width: 100%;
+  min-height: 56px;
+  margin-bottom: var(--space-sm);
+  background: var(--color-cream);
+  color: var(--color-cocoa);
+  border: 2px dashed var(--color-gold);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  cursor: pointer;
+}
+
+.secondary-button:hover { background: var(--color-gold-soft); }
+
+.table-scroll { overflow-x: auto; }
+
+.total-summary {
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-gold-soft);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-cocoa);
+}
+
+.marks-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.marks-10 { background: var(--color-success-bg); color: var(--color-success); }
+.marks-8  { background: var(--color-gold-soft); color: var(--color-gold-dark); }
+.marks-0  { background: var(--color-error-bg); color: var(--color-error); }
+.marks-na { background: #EEE; color: var(--color-cocoa-soft); }
+
+/* --- Batch cards (Products Made): groups every raw-material row that
+   belongs to the same batch — same Date/Time + Product + Start Time —
+   into one card, instead of one flat line per raw material. --- */
+.batch-card {
+  border: 2px solid var(--color-gold-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  background: var(--color-cream);
+}
+
+.batch-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.batch-card-product {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--color-cocoa);
+}
+
+.batch-card-time {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-cocoa-soft);
+}
+
+.batch-card-meta {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-cocoa-soft);
+  margin-bottom: 8px;
+}
+
+.batch-card-meta strong { color: var(--color-cocoa); }
+
+.batch-card-materials {
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+.batch-card-remarks {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-cocoa);
+  font-style: italic;
+}
+/* --- Sales tab: product grid (4 per row) + bill summary --- */
+.sales-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+.sales-columns {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .sales-columns { grid-template-columns: 1fr; }
+}
+
+.bill-header-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+@media (max-width: 720px) {
+  .bill-header-fields { grid-template-columns: 1fr; }
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+}
+
+@media (max-width: 900px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.product-card {
+  border: 2px solid var(--color-gold-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs);
+  background: var(--color-card);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.product-card.has-qty {
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 2px rgba(76,122,61,0.15);
+}
+
+.product-card-image {
+  width: 100%;
+  height: 90px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  background: var(--color-gold-soft);
+}
+
+.product-card-image-fallback {
+  width: 100%;
+  height: 90px;
+  border-radius: var(--radius-md);
+  background: var(--color-plum);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  padding: 4px;
+}
+
+.product-card-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--color-cocoa);
+  text-align: center;
+}
+
+.product-card-rate {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-cocoa-soft);
+  text-align: center;
+  background: var(--color-cream);
+  border-radius: 8px;
+  padding: 3px 6px;
+}
+
+.product-card-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.product-card-inputs input,
+.product-card-inputs select {
+  width: 100%;
+  min-height: 44px;
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 2px solid var(--color-gold-soft);
+  background: var(--color-cream);
+  color: var(--color-cocoa);
+}
+
+.product-card-saleprice {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--color-green);
+  text-align: center;
+}
+
+.product-card-saleprice.error {
+  color: var(--color-error);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.bill-panel {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-soft);
+  position: sticky;
+  top: var(--space-sm);
+}
+
+.bill-table { width: 100%; border-collapse: collapse; font-family: var(--font-body); font-size: 0.9rem; }
+.bill-table th, .bill-table td { padding: 6px 6px; border-bottom: 1px solid var(--color-gold-soft); text-align: left; }
+.bill-table th { font-family: var(--font-display); font-size: 0.75rem; text-transform: uppercase; color: var(--color-cocoa-soft); }
+.bill-table td.num, .bill-table th.num { text-align: right; }
+.bill-table input.discount-input {
+  width: 70px;
+  min-height: 38px;
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 2px solid var(--color-gold-soft);
+  background: var(--color-cream);
+  text-align: right;
+}
+.bill-table tfoot td {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-cocoa);
+  border-top: 2px solid var(--color-gold);
+}
+
+.bill-total-box {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--color-gold-soft);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--color-cocoa);
+  text-align: center;
+}
+
+.payment-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.payment-check {
+  margin-top: var(--space-xs);
+  padding: 8px var(--space-sm);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-align: center;
+}
+.payment-check.ok  { background: var(--color-success-bg); color: var(--color-success); }
+.payment-check.bad { background: var(--color-error-bg); color: var(--color-error); }

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Milk Master — Pavan's Golden Dairy Products</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../../assets/css/variables.css">
+<link rel="stylesheet" href="../../assets/css/dashboard.css">
+<link rel="stylesheet" href="../../assets/css/forms.css">
+</head>
+<body>
+
+<header class="app-topbar">
+  <div class="app-topbar-left">
+    <img id="appLogo" alt="">
+    <div class="app-topbar-title">Milk Master</div>
+  </div>
+  <button class="logout-button" id="logoutBtn" type="button">
+    <img id="logoutIcon" alt="">Log Out
+  </button>
+</header>
+
+<main class="master-form-page">
+  <div class="master-columns">
+
+    <section class="form-panel">
+      <h2>Add a Milk Type</h2>
+      <form id="milkForm">
+        <div class="form-group">
+          <label for="milkType">Milk Type</label>
+          <input type="text" id="milkType" placeholder="e.g. Cow Milk, Buffalo Milk" required>
+        </div>
+        <div class="form-group">
+          <label for="minFat">Minimum Fat %</label>
+          <input type="number" id="minFat" step="0.1" min="0" placeholder="e.g. 3.5" required>
+        </div>
+        <div class="form-group">
+          <label for="minSnf">Minimum SNF %</label>
+          <input type="number" id="minSnf" step="0.1" min="0" placeholder="e.g. 8.5" required>
+        </div>
+        <div class="form-group">
+          <label for="minPoints">Minimum Points Required</label>
+          <input type="number" id="minPoints" step="0.1" min="0" placeholder="e.g. 12" required>
+        </div>
+        <button type="submit" class="primary-button" id="submitBtn">Add Milk Type</button>
+        <div class="form-status" id="formStatus"></div>
+      </form>
+    </section>
+
+    <section class="list-panel">
+      <h2>Milk Types</h2>
+      <div id="listArea"><p class="list-loading">Loading...</p></div>
+    </section>
+
+  </div>
+
+  <div style="text-align:center;">
+    <a class="back-button" href="../master.html">&#8592; Back to Master</a>
+  </div>
+</main>
+
+<script>const BASE_PATH = "../../";</script>
+<script src="../../assets/js/config.js"></script>
+<script src="../../assets/js/users-data.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/master/master-common.js"></script>
+<script src="../../assets/js/master/milk-master.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+/*
+  variables.css
+  Single source of design tokens for the whole app.
+  Change a value here and it updates everywhere — never hardcode colors/fonts in other files.
+
+  Design direction: warm dairy/golden palette, big rounded shapes, high contrast,
+  icon-first — built for users who may not read comfortably.
+*/
+
+:root {
+  /* --- Brand colors --- */
+  --color-cream: #FFF8EA;       /* page background — warm "milk & malai" tone */
+  --color-card: #FFFFFF;        /* cards / tiles */
+  --color-gold: #C9922A;        /* primary brand color ("Golden") */
+  --color-gold-dark: #9C6F1D;   /* pressed/hover state, borders */
+  --color-gold-soft: #F3DFAF;   /* soft gold backgrounds, badges */
+  --color-cocoa: #3E2A1E;       /* primary text — warm near-black */
+  --color-cocoa-soft: #7A6555;  /* secondary/muted text */
+
+  /* --- Functional / tab accent colors (also used to color-code tabs for quick recognition) --- */
+  --color-milk-blue: #2F6690;    /* Milk Input */
+  --color-green: #4C7A3D;        /* Raw Material Procurement */
+  --color-plum: #6B3F69;         /* Products Made */
+  --color-amber: #C9922A;        /* Sales */
+  --color-slate: #45586B;        /* Master */
+  --color-teal: #2E7A6E;         /* Dashboards */
+  --color-rust: #A6522B;         /* Payment Pending — money owed to the shop */
+  --color-indigo: #3F4E8C;       /* Orders — goods promised to a customer */
+
+  /* --- Status colors --- */
+  --color-success: #3F8F4F;
+  --color-error: #B3352A;
+  --color-success-bg: #E7F4E8;
+  --color-error-bg: #FBE9E7;
+
+  /* --- Typography --- */
+  --font-display: 'Baloo 2', 'Segoe UI', sans-serif;   /* headings, labels, buttons — rounded & friendly */
+  --font-body: 'Inter', 'Segoe UI', sans-serif;         /* numbers, lists, fine text */
+
+  --text-xl: 2rem;       /* big headings */
+  --text-lg: 1.4rem;     /* tile labels */
+  --text-md: 1.1rem;     /* body */
+  --text-sm: 0.95rem;    /* helper text */
+
+  /* --- Spacing & shape --- */
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 24px;
+  --space-lg: 40px;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --tap-min: 64px;       /* minimum tap target size */
+
+  /* --- Shadow --- */
+  --shadow-soft: 0 6px 20px rgba(62, 42, 30, 0.12);
+  --shadow-press: 0 2px 6px rgba(62, 42, 30, 0.18);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-cream);
+  font-family: var(--font-body);
+  color: var(--color-cocoa);
+}
+
+/* Visible keyboard focus everywhere — required for accessibility */
+a:focus-visible, button:focus-visible, input:focus-visible {
+  outline: 3px solid var(--color-milk-blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

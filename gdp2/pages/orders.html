@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pavan's Golden Dairy Products — Orders</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../assets/css/variables.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<link rel="stylesheet" href="../assets/css/forms.css">
+<link rel="stylesheet" href="../assets/css/sales.css">
+<link rel="stylesheet" href="../assets/css/pending-orders.css">
+<!-- NEW: only adds the rate editor / address / bill-discount pieces -->
+<link rel="stylesheet" href="../assets/css/rate-editor.css?v=3">
+</head>
+<body>
+
+<header class="app-topbar">
+  <div class="app-topbar-left">
+    <img id="appLogo" alt="">
+    <div>
+      <div class="app-topbar-title">Orders</div>
+      <div class="app-topbar-user" id="userLabel"></div>
+    </div>
+  </div>
+  <button class="logout-button" id="logoutBtn" type="button">
+    <img id="logoutIcon" alt="">Log Out
+  </button>
+</header>
+
+<main class="sales-page">
+
+  <!-- ============ Order header ============ -->
+  <div class="bill-header-fields">
+    <div class="form-group">
+      <label for="orderDateTime">Order Date &amp; Time</label>
+      <input type="datetime-local" id="orderDateTime" required>
+    </div>
+    <div class="form-group">
+      <label for="customerName">Customer Name</label>
+      <input type="text" id="customerName" placeholder="e.g. Ramesh" autocomplete="off" required>
+    </div>
+    <div class="form-group">
+      <label for="deliveryDateTime">Delivery Date &amp; Time</label>
+      <input type="datetime-local" id="deliveryDateTime" required>
+    </div>
+
+    <!-- NEW: one or more mobile numbers, separated by commas -->
+    <div class="form-group header-wide">
+      <label for="customerMobile">Mobile Number(s)</label>
+      <input type="text" id="customerMobile" inputmode="tel" autocomplete="off"
+             placeholder="e.g. 9876543210, 9123456789">
+      <div class="field-hint">Separate more than one number with a comma.</div>
+    </div>
+
+    <!-- NEW: free-text delivery address -->
+    <div class="form-group header-full">
+      <label for="customerAddress">Delivery Address</label>
+      <textarea id="customerAddress" rows="2"
+                placeholder="House / shop, street, village or town"></textarea>
+    </div>
+  </div>
+
+  <div class="sales-columns">
+
+    <!-- ============ LEFT: add one product at a time ============ -->
+    <section class="form-panel entry-panel">
+      <h2 id="entryHeading">Add a product to this order</h2>
+
+      <div class="form-group">
+        <label for="productName">Product</label>
+        <select id="productName"></select>
+      </div>
+
+      <!-- Master pack size and price, straight from Product Master -->
+      <div class="rate-strip" id="rateStrip">Pick a product to see its price.</div>
+
+      <div class="entry-pair">
+        <div class="form-group">
+          <label for="quantity">Quantity</label>
+          <input type="number" id="quantity" inputmode="decimal" step="0.001" min="0" placeholder="e.g. 2.5">
+        </div>
+        <div class="form-group">
+          <label for="unit">Unit</label>
+          <select id="unit"></select>
+        </div>
+      </div>
+
+      <!-- NEW: the editable price per unit. Opens on the master rate. -->
+      <div class="rate-editor" id="rateEditor">
+        <div class="rate-editor-head">
+          <span>Price per unit &mdash; change it if this customer pays a different rate</span>
+          <button type="button" class="link-button" id="resetRateBtn">&#8635; Reset to master</button>
+        </div>
+        <div class="entry-pair">
+          <div class="form-group">
+            <label for="ratePrice">Price &#8377;</label>
+            <input type="number" id="ratePrice" inputmode="decimal" step="0.0001" min="0" placeholder="e.g. 100">
+          </div>
+          <div class="form-group">
+            <label for="rateUnit">Per 1</label>
+            <select id="rateUnit"></select>
+          </div>
+        </div>
+        <div class="rate-editor-hint" id="rateHint"></div>
+      </div>
+
+      <div class="line-price-box" id="linePriceBox">
+        <span class="line-price-label">Total amount for this product</span>
+        <span class="line-price-value" id="linePriceValue">&#8377;0</span>
+      </div>
+      <div class="line-error" id="lineError"></div>
+
+      <button type="button" class="primary-button" id="addProductBtn">+ Add product to order</button>
+      <button type="button" class="secondary-button" id="cancelEditBtn" style="display:none;">Cancel edit</button>
+
+      <button type="button" class="secondary-button" id="refreshBtn" style="margin-top:var(--space-sm);">&#8635; Refresh products / units</button>
+    </section>
+
+    <!-- ============ RIGHT: this order only ============ -->
+    <section class="bill-panel">
+      <h2 class="bill-panel-title">
+        Order summary
+        <span class="bill-panel-billno" id="customerTag"></span>
+      </h2>
+
+      <div class="table-scroll">
+        <table class="bill-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Product</th>
+              <th class="num">Qty</th>
+              <th>Unit</th>
+              <th class="num">Amount &#8377;</th>
+              <th class="num">Discount &#8377;</th>
+              <th class="num">Final &#8377;</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="billBody"></tbody>
+          <tfoot id="billFoot"></tfoot>
+        </table>
+      </div>
+
+      <div class="subtotal-box" id="orderTotalBox">Order total: &#8377;0</div>
+
+      <div class="advance-head">
+        <span>Did the customer pay any advance?</span>
+        <span class="payment-quick">
+          <button type="button" class="link-button" id="noAdvanceBtn">No advance</button>
+          <button type="button" class="link-button" id="fullAdvanceBtn">Paid in full</button>
+        </span>
+      </div>
+
+      <div class="advance-fields">
+        <div class="form-group">
+          <label for="advanceAmount">Advance paid &#8377;</label>
+          <input type="number" id="advanceAmount" inputmode="decimal" step="0.01" min="0" value="0">
+        </div>
+      </div>
+
+      <div class="bill-total-box" id="balanceBox">Balance to collect: &#8377;0</div>
+      <div class="payment-check" id="advanceCheck"></div>
+
+      <button type="button" class="primary-button" id="submitBtn" style="margin-top:var(--space-sm);">Save order</button>
+      <div class="form-status" id="formStatus"></div>
+    </section>
+
+  </div>
+
+  <a class="back-button" href="../dashboard.html">&larr; Back to Dashboard</a>
+</main>
+
+<script>const BASE_PATH = "../";</script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/users-data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/master/master-common.js"></script>
+<script src="../assets/js/orders.js?v=3"></script>
+</body>
+</html>

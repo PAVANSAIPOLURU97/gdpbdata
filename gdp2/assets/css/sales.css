@@ -1,0 +1,384 @@
+/*
+  sales.css
+  Styles for pages/sales.html only. Uses nothing but the tokens in
+  variables.css, so a palette change there still flows through here.
+
+  This file REPLACES the "--- Sales tab ---" block at the bottom of
+  forms.css. That block styled the old product-card grid, which no
+  longer exists. Deleting it is optional (its classes are simply unused
+  now), but the layout classes .sales-page / .sales-columns /
+  .bill-header-fields / .bill-panel / .bill-table / .payment-* are
+  redefined here, so if you keep both, this file must load AFTER
+  forms.css — which is how sales.html links it.
+*/
+
+.sales-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+.sales-columns {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .sales-columns { grid-template-columns: 1fr; }
+}
+
+.bill-header-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: var(--shadow-soft);
+}
+
+.bill-header-fields .form-group { margin-bottom: 0; }
+
+@media (max-width: 720px) {
+  .bill-header-fields { grid-template-columns: 1fr; }
+}
+
+/* Bill No is generated, not typed — show it as a fact, not a field. */
+#billNo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--color-gold-soft);
+  border-color: var(--color-gold);
+  color: var(--color-cocoa);
+}
+
+/* ---------------- Left: entry panel ---------------- */
+
+.entry-panel { position: sticky; top: var(--space-sm); }
+
+@media (max-width: 980px) {
+  .entry-panel { position: static; }
+}
+
+.rate-strip {
+  margin-bottom: var(--space-sm);
+  padding: 10px var(--space-sm);
+  background: var(--color-gold-soft);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-cocoa);
+}
+
+.rate-strip.bad {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+/* The either/or block — the one place this screen raises its voice,
+   because getting this rule across is the whole point of the redesign. */
+.either-or {
+  border: 2px solid var(--color-gold-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  background: var(--color-cream);
+}
+
+.either-or-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-xs);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-cocoa-soft);
+}
+
+.either-or-head em { font-style: normal; font-weight: 700; color: var(--color-cocoa); }
+
+.entry-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xs);
+}
+
+.entry-pair.single { grid-template-columns: 1fr; }
+.entry-pair .form-group { margin-bottom: 0; }
+
+/* A field the app filled in, rather than the user. Reads as an answer,
+   not as a broken input. */
+.form-group input.is-derived,
+.form-group input:disabled {
+  background: var(--color-gold-soft);
+  border-style: dashed;
+  color: var(--color-cocoa);
+  opacity: 1;
+  font-weight: 600;
+  cursor: not-allowed;
+}
+
+.either-or-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0;
+  color: var(--color-cocoa-soft);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.either-or-divider::before,
+.either-or-divider::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: var(--color-gold-soft);
+  border-radius: 2px;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-gold-dark);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-button:hover { color: var(--color-cocoa); }
+
+.line-price-box {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  padding: 10px var(--space-sm);
+  margin-bottom: var(--space-xs);
+  background: var(--color-card);
+  border: 2px solid var(--color-green);
+  border-radius: var(--radius-md);
+}
+
+.line-price-label {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--color-cocoa-soft);
+}
+
+.line-price-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--color-green);
+}
+
+.line-error {
+  display: none;
+  margin-bottom: var(--space-xs);
+  padding: 8px var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* ---------------- Right: bill summary ---------------- */
+
+.bill-panel {
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-soft);
+  position: sticky;
+  top: var(--space-sm);
+}
+
+@media (max-width: 980px) {
+  .bill-panel { position: static; }
+}
+
+.bill-panel-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--color-cocoa);
+}
+
+.bill-panel-billno {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-gold-dark);
+  background: var(--color-gold-soft);
+  border-radius: 999px;
+  padding: 3px 12px;
+}
+
+.bill-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+
+.bill-table th,
+.bill-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--color-gold-soft);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.bill-table th {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-cocoa-soft);
+  white-space: nowrap;
+}
+
+.bill-table td.num, .bill-table th.num { text-align: right; }
+
+.bill-rownum {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-cocoa-soft);
+  width: 28px;
+}
+
+.bill-table td.line-final {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-cocoa);
+  white-space: nowrap;
+}
+
+.bill-empty {
+  text-align: center;
+  color: var(--color-cocoa-soft);
+  padding: var(--space-md) var(--space-xs);
+  font-family: var(--font-display);
+}
+
+.bill-table input.discount-input {
+  width: 72px;
+  min-height: 40px;
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  padding: 4px 6px;
+  border-radius: 10px;
+  border: 2px solid var(--color-gold-soft);
+  background: var(--color-cream);
+  color: var(--color-cocoa);
+  text-align: right;
+}
+
+.bill-table input.discount-input:focus {
+  border-color: var(--color-gold);
+  background: var(--color-card);
+}
+
+.bill-actions { white-space: nowrap; width: 1%; }
+
+.row-button {
+  width: 34px;
+  height: 34px;
+  margin-left: 2px;
+  border: 2px solid var(--color-gold-soft);
+  border-radius: 10px;
+  background: var(--color-cream);
+  color: var(--color-cocoa);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.row-button:hover { background: var(--color-gold-soft); }
+
+.row-button.danger {
+  border-color: var(--color-error-bg);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.row-button.danger:hover { background: var(--color-error); color: #fff; }
+
+.bill-table tfoot td {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-cocoa);
+  border-top: 2px solid var(--color-gold);
+  border-bottom: none;
+  padding-top: 10px;
+}
+
+.bill-total-box {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--color-gold);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: #fff;
+  text-align: center;
+}
+
+/* ---------------- Payment split ---------------- */
+
+.payment-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-top: var(--space-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--color-cocoa-soft);
+}
+
+.payment-quick { display: flex; gap: var(--space-xs); }
+
+.payment-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: 6px;
+}
+
+.payment-fields .form-group { margin-bottom: 0; }
+
+.payment-check {
+  margin-top: var(--space-xs);
+  padding: 10px var(--space-sm);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.payment-check.ok  { background: var(--color-success-bg); color: var(--color-success); }
+.payment-check.bad { background: var(--color-error-bg); color: var(--color-error); }
